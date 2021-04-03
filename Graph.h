@@ -8,6 +8,8 @@ public:
 	vector<pair<string, string>> edgeList;
 	map<string, int> strToInt;
 	map<int, string> intToStr;
+	set<int> undeletableVertices;
+	set<int> solution;
 
 	void addEdge(string u, string v);
 

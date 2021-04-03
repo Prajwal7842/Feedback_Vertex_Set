@@ -41,6 +41,4 @@ void readInput(Graph& graph, string inputFile) {
 		graph.adjList[u].push_back(v);
 		graph.adjList[v].push_back(u);
 	}
-
-	
 }
