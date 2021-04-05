@@ -6,11 +6,12 @@ using namespace std;
 
 void delete_vertex(map<int, multiset<int>>& g, int u) {
 	g.erase(u);
-	for(auto i: g){
+	for(auto &i: g){
 		i.second.erase(u);
 	}
 }
 
+// If there exists a vertex u of degree at most one, delete u.
 bool rule1(map<int, multiset<int>>& g) {
 	vector<int> removeVertex;
 	for(auto i : g) {
@@ -51,14 +52,14 @@ bool rule1_5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
 	return 0;
 }
 
-bool isCyclicUtil(map<int, multiset<int>> g, set<int> f, int v, vector<bool> &visited, int parent) {
+bool isCyclicUtil(map<int, multiset<int>> g, set<int> f, int v, vector<bool> &visited, int parent, int start_vertex) {
 	visited[v] = true;
 	for(auto i: g[v]) {
 		// If not visted and a vertex of F.
 		if(!visited[i] && f.count(i)>0) {
-			if (isCyclicUtil(g, f, i, visited, v))
+			if (isCyclicUtil(g, f, i, visited, v, start_vertex))
 				return true;
-		} else if(i!=parent){
+		} else if(i!=parent && i==start_vertex){
 			return true;
 		}
 	}
@@ -71,18 +72,22 @@ bool rule2(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
 	vector<int> removeVertex;
 	// For every vertex, it checks if there exists a cycle formed with vertices of F.
 	for(auto i: g) {
-		vector<bool> visited(g.size(), false);
-		if (isCyclicUtil(g, f, i.first, visited, -1)) {
-			removeVertex.push_back(i.first);
+		if(f.count(i.first)==0) {
+			vector<bool> visited(g.size(), false);
+			if (isCyclicUtil(g, f, i.first, visited, -1, i.first)) {
+				removeVertex.push_back(i.first);
+			}
 		}
 	}
 	if((int)(removeVertex.size()) == 0) return 0;
 	for(int i : removeVertex) {
+		sol.insert(i);
 		delete_vertex(g, i);
 	}
 	return 1;
 }
 
+// If there exists a vertex u of degree two, delete u and add an edge connecting its two endpoints.
 bool rule3(map<int, multiset<int>>& g) {
 	map<int, pair<int, int>> merge;
 	for(auto i : g) {
@@ -129,7 +134,10 @@ bool rule4(map<int, multiset<int>>& g) {
 	for(auto i: edgeDelete) {
 		// i.second.second is the count of the number of edges, so -2, means at max two will remain.
 		for(int j=0; j<i.second.second-2; j++){
-			g[i.first].erase(i.second.first);
+			auto itr = g[i.first].find(i.second.first);
+			if(itr!=g[i.first].end()){
+					g[i.first].erase(itr);
+			}
 		}
 	}
 	// Since this is the structure of the graph is not changed.
@@ -138,15 +146,17 @@ bool rule4(map<int, multiset<int>>& g) {
 
 // If there exists a vertex u not in F incident to a double edge uw with d(w) ≤ 3, delete u and decrease k by one.
 bool rule5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
-	vector<int> removeVertex;
+	set<int> removeVertex;
 	for(auto i: g) {
 		if(!f.count(i.first)) {
 			set<int> st(i.second.begin(), i.second.end());
 			for(auto j: st) {
-				if(i.second.count(j) == 2) {
-					if(g[j].size()<=3){
-						removeVertex.push_back(i.first);
-						break;
+				if(removeVertex.count(j) == 0) {
+					if(i.second.count(j) == 2) {
+						if(g[j].size()<=3){
+							removeVertex.insert(i.first);
+							break;
+						}
 					}
 				}
 			}
@@ -158,6 +168,23 @@ bool rule5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
 		delete_vertex(g, i);
 	}
 	return 1;
+}
+
+void print_reduced_graph(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
+	cout<<"Reduced Graph\n";
+	for(auto i: g) {
+		for(auto j: i.second){
+			cout<<i.first<<" "<<j<<"\n";
+		}
+	}
+	cout<<"\nF:\n";
+	for(auto i: f){
+		cout<<i<<"\n";
+	}
+	cout<<"\nSol:\n";
+	for(auto i: sol){
+		cout<<i<<"\n";
+	}
 }
 
 void reduce(Graph& graph) {
@@ -204,4 +231,5 @@ void reduce(Graph& graph) {
 	while(running) {
 		running = rule5(g, f, sol);
 	}
+	// print_reduced_graph(g, f, sol);
 }

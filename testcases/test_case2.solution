@@ -1,0 +1,17 @@
+//For RR1, RR1.5, RR2
+Reduced Graph
+2 3
+3 2
+3 4
+4 3
+
+F:
+2
+3
+4
+
+Sol:
+1
+5
+7
+
