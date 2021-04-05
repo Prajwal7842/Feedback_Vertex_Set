@@ -10,7 +10,11 @@ void readInput(Graph& graph, string inputFile) {
 	vector<pair<string, string>> edgeSet;
 	// Make Edge Set.
 	while(file >> vertex1 >> vertex2) {
-		graph.addEdge(vertex1, vertex2);
+		if(vertex1.compare("F")==0){
+			graph.undeletableVertices.insert(stoi(vertex2));
+		} else {
+			graph.addEdge(vertex1, vertex2);
+		}
 	}
 
 	file.close();
@@ -41,6 +45,4 @@ void readInput(Graph& graph, string inputFile) {
 		graph.adjList[u].push_back(v);
 		graph.adjList[v].push_back(u);
 	}
-
-	
 }
