@@ -102,18 +102,21 @@ bool rule3(map<int, multiset<int>>& g) {
 				v ++;
 				neighbours.second = *v;
 				merge[i.first] = neighbours;
+				break;
 			}
 		}
 	}
 	if(merge.size() == 0) return 0;
 	for(auto i : merge) {
-		g.erase(i.first);
-		int u = i.second.first;
-		int v = i.second.second;
-		g[u].insert(v);
-		g[v].insert(u);
+		cout << i.first << " -> " << i.second.first << " " << i.second.second << endl;
 	}
-	return 1;
+	auto v = *merge.begin();
+	g.erase(v.first);
+	g[v.second.first].emplace(v.second.second);
+	g[v.second.second].emplace(v.second.first);
+	g[v.second.first].erase(v.first);
+	g[v.second.second].erase(v.first);
+ 	return 1;
 }
 
 
@@ -173,20 +176,22 @@ bool rule5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
 }
 
 void print_reduced_graph(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
-	cout<<"Reduced Graph\n";
-	for(auto i: g) {
-		for(auto j: i.second){
-			cout<<i.first<<" "<<j<<"\n";
+	cout << "Reduced Graph\n";
+	for(auto i : g) {
+		for(auto j : i.second){
+			cout << i.first << " " << j << "\n";
 		}
 	}
-	cout<<"\nF:\n";
-	for(auto i: f){
-		cout<<i<<"\n";
+	cout << "\nF:\n";
+	for(auto i : f){
+		cout << i << "\n";
 	}
-	cout<<"\nSol:\n";
-	for(auto i: sol){
-		cout<<i<<"\n";
+	cout <<"\nSol:\n";
+	for(auto i : sol){
+		cout << i << "\n";
 	}
+}
+
 int getMaxDegree(map<int, multiset<int>>& g, const set<int>& f) {
 	// Returns the max degree among set of deletable vertices.
 	set<int> vertex;
@@ -223,6 +228,24 @@ bool pruningRule(map<int, multiset<int>>& g, const set<int>& f, int K) {
 	return isPossible;
 }
 
+bool solveMatroid(map<int, multiset<int>>& g, const set<int>& f, const set<int>& sol) {
+	cout << "Solution using Matroid Matching : " << endl;
+	for(auto i : g) {
+		cout << i.first << endl;
+	}
+	cout << endl;
+	cout << "F :" << endl;
+	for(auto i : f) {
+		cout << i << endl;
+	}
+	cout << endl;
+	cout << "Sol :" << endl;
+	for(auto i : sol) {
+		cout << i << endl;
+	} 
+	return 1;
+}
+
 void reduce(Graph& graph) {
 	// Main function.
 	map<int, multiset<int>> g;
@@ -257,6 +280,7 @@ void reduce(Graph& graph) {
 	while(running) {
 		running = rule3(g);
 	}
+	// print_reduced_graph(g, f, sol);
 
 	running = true;
 	while(running) {
@@ -268,13 +292,15 @@ void reduce(Graph& graph) {
 		running = rule5(g, f, sol);
 	}
 
-	// print_reduced_graph(g, f, sol);
+	print_reduced_graph(g, f, sol);
 
 	bool possible = checkReductionToMatroid(g, f);
 	if(possible == 1) {
 		// Solve using Matroid matching and exit and program.
-		solveMatroid(g);
+		cout << endl << "---------------------" << endl;
+		solveMatroid(g, f, sol);
 		// Print and exit solution.
+		exit(0);
 	}
 
 	bool solutionPossible = pruningRule(g, f, graph.K);
