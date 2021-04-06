@@ -15,5 +15,4 @@ public:
 	void addEdge(string u, string v);
 
 	void printGraph();
-	
 };
