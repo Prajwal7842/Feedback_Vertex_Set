@@ -13,6 +13,7 @@ void delete_vertex(map<int, multiset<int>>& g, int u) {
 
 // If there exists a vertex u of degree at most one, delete u.
 bool rule1(map<int, multiset<int>>& g) {
+	// If there exists a vertex u of degree at most one, delete u.
 	vector<int> removeVertex;
 	for(auto i : g) {
 		if((int)(i.second.size()) == 0) {
@@ -89,6 +90,7 @@ bool rule2(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
 
 // If there exists a vertex u of degree two, delete u and add an edge connecting its two endpoints.
 bool rule3(map<int, multiset<int>>& g) {
+	// If there exists a vertex u of degree two, delete u and add an edge connecting its two endpoints.
 	map<int, pair<int, int>> merge;
 	for(auto i : g) {
 		if((int)(i.second.size()) == 2) {
@@ -185,6 +187,40 @@ void print_reduced_graph(map<int, multiset<int>>& g, set<int> &f, set<int> &sol)
 	for(auto i: sol){
 		cout<<i<<"\n";
 	}
+int getMaxDegree(map<int, multiset<int>>& g, const set<int>& f) {
+	// Returns the max degree among set of deletable vertices.
+	set<int> vertex;
+	for(auto i : g) {
+		vertex.emplace(i.first);
+	}
+	for(auto i : f) {
+		vertex.erase(i);
+	}
+	int D = 0;
+	for(auto i : vertex) {
+		D = max(D, (int)(g[i].size()));
+	}
+	return D;
+}
+
+bool checkReductionToMatroid(map<int, multiset<int>>& g, const set<int>& f) {
+	int D = getMaxDegree(g, f);
+	if(D <= 3) {
+		return 1;
+	}
+	return 0;
+}
+
+bool pruningRule(map<int, multiset<int>>& g, const set<int>& f, int K) {
+	// Each vertex has atleast degree 3. This rule is used for existence of a solution for a particular value of K(parameter).
+	if(K < 0) return 0;
+	int D = getMaxDegree(g, f);
+	int sumOfDegree = 0;
+	for(auto i : f) {
+		sumOfDegree += ((int)(g[i].size()) - 2);
+	}
+	bool isPossible = (((K * D) - sumOfDegree) < 0);
+	return isPossible;
 }
 
 void reduce(Graph& graph) {
@@ -231,5 +267,18 @@ void reduce(Graph& graph) {
 	while(running) {
 		running = rule5(g, f, sol);
 	}
+
 	// print_reduced_graph(g, f, sol);
+
+	bool possible = checkReductionToMatroid(g, f);
+	if(possible == 1) {
+		// Solve using Matroid matching and exit and program.
+		solveMatroid(g);
+		// Print and exit solution.
+	}
+
+	bool solutionPossible = pruningRule(g, f, graph.K);
+	if(solutionPossible == 0) {
+		// Print Solution Not Possible and exit.
+	}
 }

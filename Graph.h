@@ -4,6 +4,7 @@ using namespace std;
 
 class Graph {
 public:
+	int K;
 	map<int, vector<int>> adjList;
 	vector<pair<string, string>> edgeList;
 	map<string, int> strToInt;
