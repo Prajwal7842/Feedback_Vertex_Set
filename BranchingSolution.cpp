@@ -61,7 +61,7 @@ int contractGraph(map<int, multiset<int>>& g, set<int> U) {
 
 set<int> branch(map<int, multiset<int>>& g, set<int> f, int k, bool& found) {
 	set<int> solution;
-	if(k == 0) {
+	if(k >= 0) {
 		if((int)(g.size()) == 0) {
 			found = 1;
 		}
