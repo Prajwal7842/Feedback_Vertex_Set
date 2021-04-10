@@ -1,5 +1,6 @@
 #include <bits/stdc++.h>
 #include "Graph.h"
+#include "Reduction.h"
 #include "selector.h"
 using namespace std;
 
@@ -59,16 +60,33 @@ int contractGraph(map<int, multiset<int>>& g, set<int> U) {
 	return u_dash;
 }
 
-set<int> branch(map<int, multiset<int>>& g, set<int> f, int k, bool& found) {
-	set<int> solution;
+void printset(set<int> s){
+	for(auto i: s){
+		cout<<i<<" ";
+	}
+	cout<<endl;
+}
+
+bool branch(map<int, multiset<int>> g, set<int> f, int k, set<int>& solution) {
+	Graph temp;
+	temp.adjList = g;
+	temp.undeletableVertices = f;
+	temp.solution = solution;
+	temp.K = k;
+	reduce(temp);
+	g = temp.adjList;
+	f = temp.undeletableVertices;
+	solution = temp.solution;
+	k = temp.K;
+	if(pruningRule(g, f, k)) {
+		return 0;
+	}
 	if(k >= 0) {
 		if((int)(g.size()) == 0) {
-			found = 1;
+			return 1;
 		}
-		else {
-			found = 0;
-		}
-		return solution;
+	} else {
+		return 0;
 	}
 	int chosenVertex = select_highest_degree_vertex(g, f);
 	set<int> neighbourU = getNeighbours(g, chosenVertex);
@@ -82,12 +100,10 @@ set<int> branch(map<int, multiset<int>>& g, set<int> f, int k, bool& found) {
 		i.second.erase(chosenVertex);
 	}
 	// Maybe we have to perform reduction here again for safety. Can be added later.
-	set<int> sol = branch(copy_g, f, k-1, found);
-	if(found) {
-		for(auto i : sol) solution.emplace(i);
-		return solution;
-	}
-	else {
+	if(branch(copy_g, f, k-1, solution)) {
+		return 1;
+	} else {
+		// Back track changes, remove vertex from soln, and since we used a copy of G, no changes to it.
 		solution.erase(chosenVertex);
 	}
 
@@ -98,26 +114,25 @@ set<int> branch(map<int, multiset<int>>& g, set<int> f, int k, bool& found) {
 	int u_dash = contractGraph(g_dash, U);
 	for(auto i : U) f_dash.erase(i);
 	f_dash.insert(u_dash);
-	set<int> sol2 = branch(g_dash, f_dash, k, found);
-	if(found) {
-		for(auto i : sol) solution.emplace(i);
-		return solution;
+	if(branch(g_dash, f_dash, k, solution)) {
+		return 1;
 	}
-	return solution;
+	return 0;
 }
 
 
 void solve(Graph &graph) {
-	bool solnFound = 0;
-	set<int> solution = branch(graph.adjList, graph.undeletableVertices, graph.K, solnFound);
+	cout<<graph.adjList.size()<<"\n";
+	printf("Initial reduction rule started.\n");
+	reduce(graph);
+	cout<<graph.adjList.size()<<"\n";
+	printf("Initial reduction rule completed.\n");
+	bool solnFound = branch(graph.adjList, graph.undeletableVertices, graph.K, graph.solution);
 	if(solnFound) {
-		printf("found sol\n");
-		graph.printGraph();
-		// Print Solution
+		cout<<graph.solution.size()<<"\n";
+		printset(graph.solution);
 	}
 	else {
 		printf("not found sol\n");
-		// Print No Solution Found with current K. 
-		graph.printGraph();
 	}
 }

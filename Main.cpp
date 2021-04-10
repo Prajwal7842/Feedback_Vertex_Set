@@ -3,6 +3,7 @@
 #include "Graph.h"
 #include "Reduction.h"
 #include "BranchingSolution.h"
+#include "checker.h"
 using namespace std;
 
 
@@ -18,10 +19,11 @@ int32_t main(int argc, char*argv[]) {
 	}
 
 	Graph graph;
-	graph.K = 100;
+	graph.K = 70;
 	readInput(graph, argv[1]);
 
 	// reduce(graph);
 	solve(graph);
+	check(graph.adjList, graph.solution);
 	return 0;
 }

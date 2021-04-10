@@ -219,16 +219,16 @@ bool checkReductionToMatroid(map<int, multiset<int>>& g, const set<int>& f) {
 	return 0;
 }
 
+// If return True then no solution.
 bool pruningRule(map<int, multiset<int>>& g, const set<int>& f, int K) {
 	// Each vertex has atleast degree 3. This rule is used for existence of a solution for a particular value of K(parameter).
-	if(K < 0) return 0;
+	if(K < 0) return true;
 	int D = getMaxDegree(g, f);
 	int sumOfDegree = 0;
 	for(auto i : f) {
 		sumOfDegree += ((int)(g[i].size()) - 2);
 	}
-	bool isPossible = (((K * D) - sumOfDegree) < 0);
-	return isPossible;
+	return (((K * D) - sumOfDegree) < 0);
 }
 
 bool solveMatroid(map<int, multiset<int>>& g, const set<int>& f, const set<int>& sol) {
@@ -250,53 +250,55 @@ bool solveMatroid(map<int, multiset<int>>& g, const set<int>& f, const set<int>&
 }
 
 void reduce(Graph& graph) {
-
+	bool changes_to_graph = true;
+	while(changes_to_graph){
+	changes_to_graph = false;
 	bool running = true;
 	while(running) {
 		running = rule1(graph.adjList);
+		changes_to_graph = changes_to_graph || running;
 	}
 
 	running = true;
 	while(running) {
 		running = rule1_5(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
+		changes_to_graph = changes_to_graph || running;
 	}
 
 	running = true;
 	while(running) {
 		running = rule2(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
+		changes_to_graph = changes_to_graph || running;
 	}
 
 	running = true;
 	while(running) {
 		running = rule3(graph.adjList);
+		changes_to_graph = changes_to_graph || running;
 	}
-	// print_reduced_graph(g, f, sol);
+	// graph.printGraph();
 
 	running = true;
 	while(running) {
 		running = rule4(graph.adjList);
+		changes_to_graph = changes_to_graph || running;
 	}
 
 	running = true;
 	while(running) {
 		running = rule5(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
+		changes_to_graph = changes_to_graph || running;
+	}
 	}
 
 	// print_reduced_graph(g, f, sol);
 
-	bool possible = checkReductionToMatroid(graph.adjList, graph.undeletableVertices);
-	if(possible == 1) {
-		// Solve using Matroid matching and exit and program.
-		cout << endl << "---------------------" << endl;
-		solveMatroid(graph.adjList, graph.undeletableVertices, graph.solution);
-		// Print and exit solution.
-		exit(0);
-	}
-
-	bool solutionPossible = pruningRule(graph.adjList, graph.undeletableVertices, graph.K);
-	if(solutionPossible == 0) {
-		// Print Solution Not Possible and exit.
-		printf("No solution.\n");
-		exit(0);
-	}
+	// bool possible = checkReductionToMatroid(graph.adjList, graph.undeletableVertices);
+	// if(possible == 1) {
+	// 	// Solve using Matroid matching and exit and program.
+	// 	cout << endl << "---------------------" << endl;
+	// 	solveMatroid(graph.adjList, graph.undeletableVertices, graph.solution);
+	// 	// Print and exit solution.
+	// 	exit(0);
+	// }
 }
