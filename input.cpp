@@ -42,7 +42,7 @@ void readInput(Graph& graph, string inputFile) {
 	for(auto i : graph.edgeList) {
 		int u = graph.strToInt[i.first];
 		int v = graph.strToInt[i.second];
-		graph.adjList[u].push_back(v);
-		graph.adjList[v].push_back(u);
+		graph.adjList[u].insert(v);
+		graph.adjList[v].insert(u);
 	}
 }

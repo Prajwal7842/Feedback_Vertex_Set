@@ -2,6 +2,7 @@
 #include "input.h"
 #include "Graph.h"
 #include "Reduction.h"
+#include "BranchingSolution.h"
 using namespace std;
 
 
@@ -17,9 +18,10 @@ int32_t main(int argc, char*argv[]) {
 	}
 
 	Graph graph;
+	graph.K = 100;
 	readInput(graph, argv[1]);
 
-	reduce(graph);
-
+	// reduce(graph);
+	solve(graph);
 	return 0;
 }

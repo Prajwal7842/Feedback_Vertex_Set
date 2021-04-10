@@ -14,5 +14,17 @@ void Graph :: printGraph() {
 		}
 		cout << endl;
 	}
+
+	cout<<"F:\n";
+	for(auto i: undeletableVertices) {
+		cout<<i<<"\n";
+	}
+
+	cout<<"Sol:\n";
+	for(auto i: solution) {
+		cout<<i<<"\n";
+	}
+
+	cout<<"K:"<<K<<endl;
 }
 	

@@ -3,19 +3,6 @@
 #include "selector.h"
 using namespace std;
 
-void getCopy(Graph& graph, map<int, multiset<int>>& g, set<int> f, set<int>& sol) {
-	for(auto i : graph.adjList) {
-		for(int j : i.second)
-			g[i.first].emplace(j);
-	} 
-	for(auto i: graph.undeletableVertices) {
-		f.insert(i);
-	}
-	for(auto i: graph.solution) {
-		sol.insert(i);
-	}
-}
-
 set<int> getNeighbours(map<int, multiset<int>>& g, int vertex) {
 	// Helper function for returning neighbours of a vertex.
 	set<int> neigh;
@@ -36,7 +23,7 @@ set<int> getU(const set<int>& neigh, const set<int>& f) {
 	return U;
 }
 
-void getNewVertex(map<int, multiset<int>>& g) {
+int getNewVertex(map<int, multiset<int>>& g) {
 	// Returns  a new vertex to be used to represent the set U.
 	int maxxV = 0;
 	for(auto i : g) maxxV = max(maxxV, i.first);
@@ -121,16 +108,16 @@ set<int> branch(map<int, multiset<int>>& g, set<int> f, int k, bool& found) {
 
 
 void solve(Graph &graph) {
-	map<int, multiset<int>>& g;
-	set<int> f;
-	set<int> sol;
-	getCopy(graph, g, f, s);
 	bool solnFound = 0;
-	set<int> solution = branch(g, f, graph.K, solnFound);
+	set<int> solution = branch(graph.adjList, graph.undeletableVertices, graph.K, solnFound);
 	if(solnFound) {
+		printf("found sol\n");
+		graph.printGraph();
 		// Print Solution
 	}
 	else {
+		printf("not found sol\n");
 		// Print No Solution Found with current K. 
+		graph.printGraph();
 	}
 }

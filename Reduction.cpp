@@ -31,7 +31,7 @@ bool rule1(map<int, multiset<int>>& g) {
 }
 
 // If there exists a vertex u not in F, which has a double edge with w which is in F, then remove u and reduce k by 1.
-bool rule1_5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
+bool rule1_5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol, int &k) {
 	vector<int> removeVertex;
 	for(auto i: g) {
 		if(!f.count(i.first)) {
@@ -48,6 +48,7 @@ bool rule1_5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
 	}
 	for(auto i: removeVertex) {
 		sol.insert(i);
+		k--;
 		delete_vertex(g, i);
 	}
 	return 0;
@@ -69,7 +70,7 @@ bool isCyclicUtil(map<int, multiset<int>> g, set<int> f, int v, vector<bool> &vi
 
 
 // If there exists a vertex u not in F such that G[F ∪ {u}] contains a cycle, delete u and decrease k by one.
-bool rule2(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
+bool rule2(map<int, multiset<int>>& g, set<int> &f, set<int> &sol, int &k) {
 	vector<int> removeVertex;
 	// For every vertex, it checks if there exists a cycle formed with vertices of F.
 	for(auto i: g) {
@@ -83,6 +84,7 @@ bool rule2(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
 	if((int)(removeVertex.size()) == 0) return 0;
 	for(int i : removeVertex) {
 		sol.insert(i);
+		k--;
 		delete_vertex(g, i);
 	}
 	return 1;
@@ -107,9 +109,9 @@ bool rule3(map<int, multiset<int>>& g) {
 		}
 	}
 	if(merge.size() == 0) return 0;
-	for(auto i : merge) {
-		cout << i.first << " -> " << i.second.first << " " << i.second.second << endl;
-	}
+	// for(auto i : merge) {
+	// 	cout << i.first << " -> " << i.second.first << " " << i.second.second << endl;
+	// }
 	auto v = *merge.begin();
 	g.erase(v.first);
 	g[v.second.first].emplace(v.second.second);
@@ -150,7 +152,7 @@ bool rule4(map<int, multiset<int>>& g) {
 }
 
 // If there exists a vertex u not in F incident to a double edge uw with d(w) ≤ 3, delete u and decrease k by one.
-bool rule5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
+bool rule5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol, int &k) {
 	set<int> removeVertex;
 	for(auto i: g) {
 		if(!f.count(i.first)) {
@@ -170,6 +172,7 @@ bool rule5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
 	if((int)(removeVertex.size()) == 0) return 0;
 	for(auto i: removeVertex) {
 		sol.insert(i);
+		k--;
 		delete_vertex(g, i);
 	}
 	return 1;
@@ -247,64 +250,53 @@ bool solveMatroid(map<int, multiset<int>>& g, const set<int>& f, const set<int>&
 }
 
 void reduce(Graph& graph) {
-	// Main function.
-	map<int, multiset<int>> g;
-	set<int> f, sol;
-	for(auto i : graph.adjList) {
-		for(int j : i.second)
-			g[i.first].emplace(j);
-	} 
-	for(auto i: graph.undeletableVertices) {
-		f.insert(i);
-	}
-	for(auto i: graph.solution) {
-		sol.insert(i);
-	}
 
 	bool running = true;
 	while(running) {
-		running = rule1(g);
+		running = rule1(graph.adjList);
 	}
 
 	running = true;
 	while(running) {
-		running = rule1_5(g, f, sol);
+		running = rule1_5(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
 	}
 
 	running = true;
 	while(running) {
-		running = rule2(g, f, sol);
+		running = rule2(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
 	}
 
 	running = true;
 	while(running) {
-		running = rule3(g);
+		running = rule3(graph.adjList);
 	}
 	// print_reduced_graph(g, f, sol);
 
 	running = true;
 	while(running) {
-		running = rule4(g);
+		running = rule4(graph.adjList);
 	}
 
 	running = true;
 	while(running) {
-		running = rule5(g, f, sol);
+		running = rule5(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
 	}
 
-	print_reduced_graph(g, f, sol);
+	// print_reduced_graph(g, f, sol);
 
-	bool possible = checkReductionToMatroid(g, f);
+	bool possible = checkReductionToMatroid(graph.adjList, graph.undeletableVertices);
 	if(possible == 1) {
 		// Solve using Matroid matching and exit and program.
 		cout << endl << "---------------------" << endl;
-		solveMatroid(g, f, sol);
+		solveMatroid(graph.adjList, graph.undeletableVertices, graph.solution);
 		// Print and exit solution.
 		exit(0);
 	}
 
-	bool solutionPossible = pruningRule(g, f, graph.K);
+	bool solutionPossible = pruningRule(graph.adjList, graph.undeletableVertices, graph.K);
 	if(solutionPossible == 0) {
 		// Print Solution Not Possible and exit.
+		printf("No solution.\n");
+		exit(0);
 	}
 }
