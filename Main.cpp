@@ -19,7 +19,7 @@ int32_t main(int argc, char*argv[]) {
 	}
 
 	Graph graph;
-	graph.K = 70;
+	graph.K = 191;
 	readInput(graph, argv[1]);
 
 	// reduce(graph);

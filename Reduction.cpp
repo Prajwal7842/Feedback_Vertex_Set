@@ -75,7 +75,7 @@ bool rule2(map<int, multiset<int>>& g, set<int> &f, set<int> &sol, int &k) {
 	// For every vertex, it checks if there exists a cycle formed with vertices of F.
 	for(auto i: g) {
 		if(f.count(i.first)==0) {
-			vector<bool> visited(g.size(), false);
+			vector<bool> visited(g.rbegin()->first + 1, false);
 			if (isCyclicUtil(g, f, i.first, visited, -1, i.first)) {
 				removeVertex.push_back(i.first);
 			}
@@ -265,11 +265,12 @@ void reduce(Graph& graph) {
 		changes_to_graph = changes_to_graph || running;
 	}
 
-	running = true;
-	while(running) {
-		running = rule2(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
-		changes_to_graph = changes_to_graph || running;
-	}
+	// running = true;
+	// while(running) {
+	// 	printf("RR2\n");
+	// 	running = rule2(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
+	// 	changes_to_graph = changes_to_graph || running;
+	// }
 
 	running = true;
 	while(running) {
@@ -293,12 +294,11 @@ void reduce(Graph& graph) {
 
 	// print_reduced_graph(g, f, sol);
 
-	// bool possible = checkReductionToMatroid(graph.adjList, graph.undeletableVertices);
-	// if(possible == 1) {
-	// 	// Solve using Matroid matching and exit and program.
-	// 	cout << endl << "---------------------" << endl;
-	// 	solveMatroid(graph.adjList, graph.undeletableVertices, graph.solution);
-	// 	// Print and exit solution.
-	// 	exit(0);
-	// }
+	bool possible = checkReductionToMatroid(graph.adjList, graph.undeletableVertices);
+	if(possible == 1) {
+		// Solve using Matroid matching and exit and program.
+		printf("------Solvable by Matroid matching-------\n");
+		// solveMatroid(graph.adjList, graph.undeletableVertices, graph.solution);
+		// Print and exit solution.
+	}
 }

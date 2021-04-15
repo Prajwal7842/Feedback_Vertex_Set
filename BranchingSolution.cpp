@@ -93,6 +93,7 @@ bool branch(map<int, multiset<int>> g, set<int> f, int k, set<int>& solution) {
 	set<int> U = getU(neighbourU, f);
 
 	// 1st Branch : Assume chosenVertex is a part of solution.
+	printf("Branch1 %ld\n", g.size());
 	solution.emplace(chosenVertex);
 	map<int, multiset<int>> copy_g = g;
 	copy_g.erase(chosenVertex);
@@ -108,6 +109,7 @@ bool branch(map<int, multiset<int>> g, set<int> f, int k, set<int>& solution) {
 	}
 
 	// 2nd Branch : Assume chosenVertex is not part of solution.
+	printf("Branch2 %ld\n", g.size());
 	map<int, multiset<int>> g_dash = g;
 	set<int> f_dash = f;
 	U.emplace(chosenVertex);
@@ -122,10 +124,10 @@ bool branch(map<int, multiset<int>> g, set<int> f, int k, set<int>& solution) {
 
 
 void solve(Graph &graph) {
-	cout<<graph.adjList.size()<<"\n";
+	printf("%ld\n", graph.adjList.size());
 	printf("Initial reduction rule started.\n");
 	reduce(graph);
-	cout<<graph.adjList.size()<<"\n";
+	printf("%ld\n", graph.adjList.size());
 	printf("Initial reduction rule completed.\n");
 	bool solnFound = branch(graph.adjList, graph.undeletableVertices, graph.K, graph.solution);
 	if(solnFound) {
