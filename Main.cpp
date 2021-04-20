@@ -27,6 +27,7 @@ int32_t main(int argc, char*argv[]) {
 
 	auto start = high_resolution_clock::now();
 	RRTimeLog time1, time2;
+	time1.start_time = start;
 	time2.start_time = start;
 	cout<<argv[1]<<",";
 	if(solve(graph, time1, time2) == 0) {
