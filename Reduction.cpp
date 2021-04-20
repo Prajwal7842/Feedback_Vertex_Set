@@ -243,6 +243,12 @@ int countEdges(map<int, multiset<int>> g) {
 void reduce(Graph& graph, RRTimeLog &time) {
 	bool changes_to_graph = true;
 	while(changes_to_graph){
+	auto now = high_resolution_clock::now();
+	auto total_duration = duration_cast<minutes>(now - time.start_time);
+	if(total_duration.count() >= 30) {
+		cout<<"TIMEOUT\n";
+		exit(0);
+	}
 	changes_to_graph = false;
 	bool running;
 	std::chrono::_V2::system_clock::time_point start, end;

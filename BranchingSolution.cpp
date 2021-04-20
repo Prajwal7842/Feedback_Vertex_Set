@@ -69,6 +69,12 @@ void printset(set<int> s){
 }
 
 bool branch(map<int, multiset<int>> g, set<int> f, int k, set<int>& solution, RRTimeLog &time2) {
+	auto now = high_resolution_clock::now();
+	auto total_duration = duration_cast<minutes>(now - time2.start_time);
+	if(total_duration.count() >= 30) {
+		cout<<"TIMEOUT\n";
+		exit(0);
+	}
 	Graph temp;
 	temp.adjList = g;
 	temp.undeletableVertices = f;

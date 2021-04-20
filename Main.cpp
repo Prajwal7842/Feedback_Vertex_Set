@@ -15,20 +15,22 @@ int32_t main(int argc, char*argv[]) {
 	cout.tie(0);
 
 
-	if(argc != 3) {
-		cout<<"Usage : "<<argv[0]<<" <InputFileName>"<<"<value K>"<<endl;
+	if(argc != 4) {
+		cout<<"Usage : "<<argv[0]<<"<InputFileName> "<<"<outputFileName> "<<"<value K>"<<endl;
 		return 0;
 	}
+	freopen(argv[2], "a", stdout);
 
 	Graph graph;
-	graph.K = atoi(argv[2]);;
+	graph.K = atoi(argv[3]);;
 	readInput(graph, argv[1]);
 
 	auto start = high_resolution_clock::now();
 	RRTimeLog time1, time2;
 	time2.start_time = start;
-	if(!solve(graph, time1, time2)) {
-		cout<<"false"<<endl;
+	cout<<argv[1]<<",";
+	if(solve(graph, time1, time2) == 0) {
+		cout<<"false"<<",";
 	} else {
 		auto end = high_resolution_clock::now();
 		if(!time2.matroid_matching_completed){
@@ -36,14 +38,13 @@ int32_t main(int argc, char*argv[]) {
 		}
 		if(check(graph.adjList, graph.solution)) {
 			auto duration = duration_cast<milliseconds>(end - start);
-			cout<<duration.count()<<endl;
+			cout<<duration.count()<<",";
 			duration = duration_cast<milliseconds>(time2.matroid_matching_time - time2.start_time);
-			cout<<duration.count()<<endl;
-			cout<<"Initial RR: "<<endl;
+			cout<<duration.count()<<",";
 			time1.logMsg();
-			cout<<"Branch RR: "<<endl;
 			time2.logMsg();
 		}
 	}
+	cout<<endl;
 	return 0;
 }
