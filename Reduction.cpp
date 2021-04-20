@@ -1,6 +1,7 @@
 #include <bits/stdc++.h>
 #include "Graph.h"
 #include "Reduction.h"
+#include "Timer.h"
 using namespace std;
 
 
@@ -13,6 +14,7 @@ void delete_vertex(map<int, multiset<int>>& g, int u) {
 
 // If there exists a vertex u of degree at most one, delete u.
 bool rule1(map<int, multiset<int>>& g) {
+	// If there exists a vertex u of degree at most one, delete u.
 	vector<int> removeVertex;
 	for(auto i : g) {
 		if((int)(i.second.size()) == 0) {
@@ -30,7 +32,7 @@ bool rule1(map<int, multiset<int>>& g) {
 }
 
 // If there exists a vertex u not in F, which has a double edge with w which is in F, then remove u and reduce k by 1.
-bool rule1_5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
+bool rule1_5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol, int &k) {
 	vector<int> removeVertex;
 	for(auto i: g) {
 		if(!f.count(i.first)) {
@@ -47,6 +49,7 @@ bool rule1_5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
 	}
 	for(auto i: removeVertex) {
 		sol.insert(i);
+		k--;
 		delete_vertex(g, i);
 	}
 	return 0;
@@ -68,12 +71,12 @@ bool isCyclicUtil(map<int, multiset<int>> g, set<int> f, int v, vector<bool> &vi
 
 
 // If there exists a vertex u not in F such that G[F ∪ {u}] contains a cycle, delete u and decrease k by one.
-bool rule2(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
+bool rule2(map<int, multiset<int>>& g, set<int> &f, set<int> &sol, int &k) {
 	vector<int> removeVertex;
 	// For every vertex, it checks if there exists a cycle formed with vertices of F.
 	for(auto i: g) {
 		if(f.count(i.first)==0) {
-			vector<bool> visited(g.size(), false);
+			vector<bool> visited(g.rbegin()->first + 1, false);
 			if (isCyclicUtil(g, f, i.first, visited, -1, i.first)) {
 				removeVertex.push_back(i.first);
 			}
@@ -82,6 +85,7 @@ bool rule2(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
 	if((int)(removeVertex.size()) == 0) return 0;
 	for(int i : removeVertex) {
 		sol.insert(i);
+		k--;
 		delete_vertex(g, i);
 	}
 	return 1;
@@ -89,6 +93,7 @@ bool rule2(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
 
 // If there exists a vertex u of degree two, delete u and add an edge connecting its two endpoints.
 bool rule3(map<int, multiset<int>>& g) {
+	// If there exists a vertex u of degree two, delete u and add an edge connecting its two endpoints.
 	map<int, pair<int, int>> merge;
 	for(auto i : g) {
 		if((int)(i.second.size()) == 2) {
@@ -100,18 +105,21 @@ bool rule3(map<int, multiset<int>>& g) {
 				v ++;
 				neighbours.second = *v;
 				merge[i.first] = neighbours;
+				break;
 			}
 		}
 	}
 	if(merge.size() == 0) return 0;
-	for(auto i : merge) {
-		g.erase(i.first);
-		int u = i.second.first;
-		int v = i.second.second;
-		g[u].insert(v);
-		g[v].insert(u);
-	}
-	return 1;
+	// for(auto i : merge) {
+	// 	cout << i.first << " -> " << i.second.first << " " << i.second.second << endl;
+	// }
+	auto v = *merge.begin();
+	g.erase(v.first);
+	g[v.second.first].emplace(v.second.second);
+	g[v.second.second].emplace(v.second.first);
+	g[v.second.first].erase(v.first);
+	g[v.second.second].erase(v.first);
+ 	return 1;
 }
 
 
@@ -145,7 +153,7 @@ bool rule4(map<int, multiset<int>>& g) {
 }
 
 // If there exists a vertex u not in F incident to a double edge uw with d(w) ≤ 3, delete u and decrease k by one.
-bool rule5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
+bool rule5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol, int &k) {
 	set<int> removeVertex;
 	for(auto i: g) {
 		if(!f.count(i.first)) {
@@ -165,71 +173,179 @@ bool rule5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
 	if((int)(removeVertex.size()) == 0) return 0;
 	for(auto i: removeVertex) {
 		sol.insert(i);
+		k--;
 		delete_vertex(g, i);
 	}
 	return 1;
 }
 
 void print_reduced_graph(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
-	cout<<"Reduced Graph\n";
-	for(auto i: g) {
-		for(auto j: i.second){
-			cout<<i.first<<" "<<j<<"\n";
+	cout << "Reduced Graph\n";
+	for(auto i : g) {
+		for(auto j : i.second){
+			cout << i.first << " " << j << "\n";
 		}
 	}
-	cout<<"\nF:\n";
-	for(auto i: f){
-		cout<<i<<"\n";
+	cout << "\nF:\n";
+	for(auto i : f){
+		cout << i << "\n";
 	}
-	cout<<"\nSol:\n";
-	for(auto i: sol){
-		cout<<i<<"\n";
+	cout <<"\nSol:\n";
+	for(auto i : sol){
+		cout << i << "\n";
 	}
 }
 
-void reduce(Graph& graph) {
-	// Main function.
-	map<int, multiset<int>> g;
-	set<int> f, sol;
-	for(auto i : graph.adjList) {
-		for(int j : i.second)
-			g[i.first].emplace(j);
-	} 
-	for(auto i: graph.undeletableVertices) {
-		f.insert(i);
+int getMaxDegree(map<int, multiset<int>>& g, const set<int>& f) {
+	// Returns the max degree among set of deletable vertices.
+	set<int> vertex;
+	for(auto i : g) {
+		vertex.emplace(i.first);
 	}
-	for(auto i: graph.solution) {
-		sol.insert(i);
+	for(auto i : f) {
+		vertex.erase(i);
 	}
+	int D = 0;
+	for(auto i : vertex) {
+		D = max(D, (int)(g[i].size()));
+	}
+	return D;
+}
 
-	bool running = true;
-	while(running) {
-		running = rule1(g);
+bool checkReductionToMatroid(map<int, multiset<int>>& g, const set<int>& f) {
+	int D = getMaxDegree(g, f);
+	if(D <= 3) {
+		return 1;
 	}
+	return 0;
+}
+
+// If return True then no solution.
+bool pruningRule(map<int, multiset<int>>& g, const set<int>& f, int K) {
+	// Each vertex has atleast degree 3. This rule is used for existence of a solution for a particular value of K(parameter).
+	if(K < 0) return true;
+	int D = getMaxDegree(g, f);
+	int sumOfDegree = 0;
+	for(auto i : f) {
+		sumOfDegree += ((int)(g[i].size()) - 2);
+	}
+	return (((K * D) - sumOfDegree) < 0);
+}
+
+int countEdges(map<int, multiset<int>> g) {
+	int count = 0;
+	for(auto i: g) {
+		count += i.second.size();
+	}
+	return count;
+}
+
+void reduce(Graph& graph, RRTimeLog &time) {
+	bool changes_to_graph = true;
+	while(changes_to_graph){
+	changes_to_graph = false;
+	bool running;
+	std::chrono::_V2::system_clock::time_point start, end;
+	int initialVertex, finalVertex, initialEdges, finalEdges;
+
 
 	running = true;
+	start = high_resolution_clock::now();
+	initialVertex = graph.adjList.size();
+	initialEdges = countEdges(graph.adjList);
 	while(running) {
-		running = rule1_5(g, f, sol);
+		running = rule1(graph.adjList);
+		changes_to_graph = changes_to_graph || running;
 	}
+	finalVertex = graph.adjList.size();
+	finalEdges = countEdges(graph.adjList);
+	end = high_resolution_clock::now();
+	time.time_rr1 += duration_cast<milliseconds>(end - start);
+	time.vertex_reduced_1 += initialVertex - finalVertex;
+	time.edge_reduced_1 += initialEdges - finalEdges;
 
 	running = true;
+	start = high_resolution_clock::now();
+	initialVertex = graph.adjList.size();
+	initialEdges = countEdges(graph.adjList);
 	while(running) {
-		running = rule2(g, f, sol);
+		running = rule1_5(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
+		changes_to_graph = changes_to_graph || running;
 	}
+	finalVertex = graph.adjList.size();
+	finalEdges = countEdges(graph.adjList);
+	end = high_resolution_clock::now();
+	time.time_rr1_5 += duration_cast<milliseconds>(end - start);
+	time.vertex_reduced_1_5 += initialVertex - finalVertex;
+	time.edge_reduced_1_5 += initialEdges - finalEdges;
+
 
 	running = true;
+	start = high_resolution_clock::now();
+	initialVertex = graph.adjList.size();
+	initialEdges = countEdges(graph.adjList);
 	while(running) {
-		running = rule3(g);
+		running = rule2(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
+		changes_to_graph = changes_to_graph || running;
 	}
+	finalVertex = graph.adjList.size();
+	finalEdges = countEdges(graph.adjList);
+	end = high_resolution_clock::now();
+	time.time_rr2 += duration_cast<milliseconds>(end - start);
+	time.vertex_reduced_2 += initialVertex - finalVertex;
+	time.edge_reduced_2 += initialEdges - finalEdges;
 
 	running = true;
+	start = high_resolution_clock::now();
+	initialVertex = graph.adjList.size();
+	initialEdges = countEdges(graph.adjList);
 	while(running) {
-		running = rule4(g);
+		running = rule3(graph.adjList);
+		changes_to_graph = changes_to_graph || running;
 	}
+	finalVertex = graph.adjList.size();
+	finalEdges = countEdges(graph.adjList);
+	end = high_resolution_clock::now();
+	time.time_rr3 += duration_cast<milliseconds>(end - start);
+	time.vertex_reduced_3 += initialVertex - finalVertex;
+	time.edge_reduced_3 += initialEdges - finalEdges;
 
 	running = true;
+	start = high_resolution_clock::now();
+	initialVertex = graph.adjList.size();
+	initialEdges = countEdges(graph.adjList);
 	while(running) {
-		running = rule5(g, f, sol);
+		running = rule4(graph.adjList);
+		changes_to_graph = changes_to_graph || running;
 	}
-	// print_reduced_graph(g, f, sol);
+	finalVertex = graph.adjList.size();
+	finalEdges = countEdges(graph.adjList);
+	end = high_resolution_clock::now();
+	time.time_rr4 += duration_cast<milliseconds>(end - start);
+	time.vertex_reduced_4 += initialVertex - finalVertex;
+	time.edge_reduced_4 += initialEdges - finalEdges;
+
+	running = true;
+	start = high_resolution_clock::now();
+	initialVertex = graph.adjList.size();
+	initialEdges = countEdges(graph.adjList);
+	while(running) {
+		running = rule5(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
+		changes_to_graph = changes_to_graph || running;
+	}
+	finalVertex = graph.adjList.size();
+	finalEdges = countEdges(graph.adjList);
+	end = high_resolution_clock::now();
+	time.time_rr5 += duration_cast<milliseconds>(end - start);
+	time.vertex_reduced_5 += initialVertex - finalVertex;
+	time.edge_reduced_5 += initialEdges - finalEdges;
+	}
+
+	if(!time.matroid_matching_completed) {
+		bool possible = checkReductionToMatroid(graph.adjList, graph.undeletableVertices);
+		if(possible == 1) {
+			time.matroid_matching_time = high_resolution_clock::now();
+			time.matroid_matching_completed = true;
+		}
+	}
 }
