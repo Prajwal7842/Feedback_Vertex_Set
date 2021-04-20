@@ -26,7 +26,7 @@ bool hasCycle(map<int, multiset<int>> g) {
    return false;
 }
 
-void check(map<int, multiset<int>> adjList, set<int> sol) {
+bool check(map<int, multiset<int>> adjList, set<int> sol) {
   for(auto u: sol){
     adjList.erase(u);
     for(auto &i: adjList){
@@ -34,33 +34,8 @@ void check(map<int, multiset<int>> adjList, set<int> sol) {
     }
   }
   if(hasCycle(adjList)){
-    printf("Wrong solution\n");
+    return false;
   } else {
-    printf("Correct solution\n");
+    return true;
   }
 }
-
-// int32_t main(int argc, char*argv[]) {
-// 	ios_base::sync_with_stdio(0);
-// 	cin.tie(0);
-// 	cout.tie(0);
-
-// 	if(argc != 3) {
-// 		cout << "Usage : " << argv[0] << " <GraphFileName>" << "<SolutionFileName>" << endl;
-// 		return 0;
-// 	}
-
-// 	Graph graph;
-// 	graph.K = 5;
-// 	readInput(graph, argv[1]);
-
-//   ifstream file; 
-// 	file.open(argv[2]);
-//   int vertex;
-//   set<int> s;
-//   while(file>>vertex) {
-//     s.insert(vertex);
-//   }
-//   check(graph.adjList, s);
-// 	return 0;
-// }

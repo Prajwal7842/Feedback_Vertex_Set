@@ -2,4 +2,4 @@
 #include <bits/stdc++.h>
 using namespace std;
 
-void solve(Graph &graph);
+bool solve(Graph &graph, RRTimeLog &time1, RRTimeLog &time2);

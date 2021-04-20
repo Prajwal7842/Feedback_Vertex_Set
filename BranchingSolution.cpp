@@ -2,6 +2,7 @@
 #include "Graph.h"
 #include "Reduction.h"
 #include "selector.h"
+#include "Timer.h"
 using namespace std;
 
 set<int> getNeighbours(map<int, multiset<int>>& g, int vertex) {
@@ -67,13 +68,13 @@ void printset(set<int> s){
 	cout<<endl;
 }
 
-bool branch(map<int, multiset<int>> g, set<int> f, int k, set<int>& solution) {
+bool branch(map<int, multiset<int>> g, set<int> f, int k, set<int>& solution, RRTimeLog &time2) {
 	Graph temp;
 	temp.adjList = g;
 	temp.undeletableVertices = f;
 	temp.solution = solution;
 	temp.K = k;
-	reduce(temp);
+	reduce(temp, time2);
 	g = temp.adjList;
 	f = temp.undeletableVertices;
 	solution = temp.solution;
@@ -93,7 +94,6 @@ bool branch(map<int, multiset<int>> g, set<int> f, int k, set<int>& solution) {
 	set<int> U = getU(neighbourU, f);
 
 	// 1st Branch : Assume chosenVertex is a part of solution.
-	printf("Branch1 %ld\n", g.size());
 	solution.emplace(chosenVertex);
 	map<int, multiset<int>> copy_g = g;
 	copy_g.erase(chosenVertex);
@@ -101,7 +101,7 @@ bool branch(map<int, multiset<int>> g, set<int> f, int k, set<int>& solution) {
 		i.second.erase(chosenVertex);
 	}
 	// Maybe we have to perform reduction here again for safety. Can be added later.
-	if(branch(copy_g, f, k-1, solution)) {
+	if(branch(copy_g, f, k-1, solution, time2)) {
 		return 1;
 	} else {
 		// Back track changes, remove vertex from soln, and since we used a copy of G, no changes to it.
@@ -109,32 +109,20 @@ bool branch(map<int, multiset<int>> g, set<int> f, int k, set<int>& solution) {
 	}
 
 	// 2nd Branch : Assume chosenVertex is not part of solution.
-	printf("Branch2 %ld\n", g.size());
 	map<int, multiset<int>> g_dash = g;
 	set<int> f_dash = f;
 	U.emplace(chosenVertex);
 	int u_dash = contractGraph(g_dash, U);
 	for(auto i : U) f_dash.erase(i);
 	f_dash.insert(u_dash);
-	if(branch(g_dash, f_dash, k, solution)) {
+	if(branch(g_dash, f_dash, k, solution, time2)) {
 		return 1;
 	}
 	return 0;
 }
 
 
-void solve(Graph &graph) {
-	printf("%ld\n", graph.adjList.size());
-	printf("Initial reduction rule started.\n");
-	reduce(graph);
-	printf("%ld\n", graph.adjList.size());
-	printf("Initial reduction rule completed.\n");
-	bool solnFound = branch(graph.adjList, graph.undeletableVertices, graph.K, graph.solution);
-	if(solnFound) {
-		cout<<graph.solution.size()<<"\n";
-		printset(graph.solution);
-	}
-	else {
-		printf("not found sol\n");
-	}
+bool solve(Graph &graph, RRTimeLog &time1, RRTimeLog &time2) {
+	reduce(graph, time1);
+	return branch(graph.adjList, graph.undeletableVertices, graph.K, graph.solution, time2);
 }
