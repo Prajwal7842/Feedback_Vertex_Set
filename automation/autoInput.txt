@@ -1,3 +1,4 @@
+../testcases/public/001.graph output.csv 204
 ../testcases/public/002.graph output.csv 47
 ../testcases/public/003.graph output.csv 10
 ../testcases/public/005.graph output.csv 19
