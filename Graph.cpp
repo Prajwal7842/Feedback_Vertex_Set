@@ -3,10 +3,12 @@
 using namespace std;
 
 void Graph :: addEdge(string u, string v) {
+	/* Function to add edge in the adjacency list of the graph */
 	edgeList.push_back({u, v});
 }
 
 void Graph :: printGraph() {
+	/* Helper function to print the graph and other essentials */
 	for(auto i : adjList) { 
 		cout << i.first << " -> ";
 		for(auto j : i.second) {

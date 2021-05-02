@@ -2,6 +2,7 @@
 using namespace std;
 
 int select_highest_degree_vertex(map<int, multiset<int>> g, set<int> f) {
+  // Selector function, returns highest degree vertex from the graph.
   set<pair<int, int>> s;
   for(auto i: g) {
     if(f.count(i.first)==0){

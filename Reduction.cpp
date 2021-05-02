@@ -6,6 +6,7 @@ using namespace std;
 
 
 void delete_vertex(map<int, multiset<int>>& g, int u) {
+	/* Function to delete a vertex from a graph and all edges assosciated with the given vertex */
 	g.erase(u);
 	for(auto &i: g){
 		i.second.erase(u);
@@ -56,6 +57,7 @@ bool rule1_5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol, int &k) {
 }
 
 bool isCyclicUtil(map<int, multiset<int>> g, set<int> f, int v, vector<bool> &visited, int parent, int start_vertex) {
+	/* Check if the input graph contains a cycle or not */
 	visited[v] = true;
 	for(auto i: g[v]) {
 		// If not visted and a vertex of F.
@@ -110,9 +112,6 @@ bool rule3(map<int, multiset<int>>& g) {
 		}
 	}
 	if(merge.size() == 0) return 0;
-	// for(auto i : merge) {
-	// 	cout << i.first << " -> " << i.second.first << " " << i.second.second << endl;
-	// }
 	auto v = *merge.begin();
 	g.erase(v.first);
 	g[v.second.first].emplace(v.second.second);
@@ -180,6 +179,7 @@ bool rule5(map<int, multiset<int>>& g, set<int> &f, set<int> &sol, int &k) {
 }
 
 void print_reduced_graph(map<int, multiset<int>>& g, set<int> &f, set<int> &sol) {
+	/* Utility function to print the graph */
 	cout << "Reduced Graph\n";
 	for(auto i : g) {
 		for(auto j : i.second){
@@ -213,6 +213,7 @@ int getMaxDegree(map<int, multiset<int>>& g, const set<int>& f) {
 }
 
 bool checkReductionToMatroid(map<int, multiset<int>>& g, const set<int>& f) {
+	/* Checks if the graph can be solved in poly time using matroid matching */
 	int D = getMaxDegree(g, f);
 	if(D <= 3) {
 		return 1;
@@ -233,6 +234,7 @@ bool pruningRule(map<int, multiset<int>>& g, const set<int>& f, int K) {
 }
 
 int countEdges(map<int, multiset<int>> g) {
+	/* Utility function to count the total number of edges */
 	int count = 0;
 	for(auto i: g) {
 		count += i.second.size();
@@ -241,110 +243,122 @@ int countEdges(map<int, multiset<int>> g) {
 }
 
 void reduce(Graph& graph, RRTimeLog &time) {
+	/* Function to apply reduction rule to the graph exhaustively */
+
 	bool changes_to_graph = true;
-	while(changes_to_graph){
-	auto now = high_resolution_clock::now();
-	auto total_duration = duration_cast<minutes>(now - time.start_time);
-	if(total_duration.count() >= 30) {
-		cout<<"TIMEOUT\n";
-		exit(0);
-	}
-	changes_to_graph = false;
-	bool running;
-	std::chrono::_V2::system_clock::time_point start, end;
-	int initialVertex, finalVertex, initialEdges, finalEdges;
+	while(changes_to_graph){ // Main Loop
+		auto now = high_resolution_clock::now();
+		auto total_duration = duration_cast<minutes>(now - time.start_time);
+		if(total_duration.count() >= 30) {
+			cout<<"TIMEOUT\n";
+			exit(0);
+		}
+		changes_to_graph = false;
+		bool running;
+		std::chrono::_V2::system_clock::time_point start, end;
+		int initialVertex, finalVertex, initialEdges, finalEdges;
 
+		// RR1 begin
+		running = true;
+		start = high_resolution_clock::now();
+		initialVertex = graph.adjList.size();
+		initialEdges = countEdges(graph.adjList);
+		while(running) {
+			running = rule1(graph.adjList);
+			changes_to_graph = changes_to_graph || running;
+		}
+		finalVertex = graph.adjList.size();
+		finalEdges = countEdges(graph.adjList);
+		end = high_resolution_clock::now();
+		time.time_rr1 += duration_cast<milliseconds>(end - start);
+		time.vertex_reduced_1 += initialVertex - finalVertex;
+		time.edge_reduced_1 += initialEdges - finalEdges;
+		// RR1 end
 
-	running = true;
-	start = high_resolution_clock::now();
-	initialVertex = graph.adjList.size();
-	initialEdges = countEdges(graph.adjList);
-	while(running) {
-		running = rule1(graph.adjList);
-		changes_to_graph = changes_to_graph || running;
-	}
-	finalVertex = graph.adjList.size();
-	finalEdges = countEdges(graph.adjList);
-	end = high_resolution_clock::now();
-	time.time_rr1 += duration_cast<milliseconds>(end - start);
-	time.vertex_reduced_1 += initialVertex - finalVertex;
-	time.edge_reduced_1 += initialEdges - finalEdges;
+		// RR1_5 begin
+		running = true;
+		start = high_resolution_clock::now();
+		initialVertex = graph.adjList.size();
+		initialEdges = countEdges(graph.adjList);
+		while(running) {
+			running = rule1_5(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
+			changes_to_graph = changes_to_graph || running;
+		}
+		finalVertex = graph.adjList.size();
+		finalEdges = countEdges(graph.adjList);
+		end = high_resolution_clock::now();
+		time.time_rr1_5 += duration_cast<milliseconds>(end - start);
+		time.vertex_reduced_1_5 += initialVertex - finalVertex;
+		time.edge_reduced_1_5 += initialEdges - finalEdges;
+		// RR1_5 end
 
-	running = true;
-	start = high_resolution_clock::now();
-	initialVertex = graph.adjList.size();
-	initialEdges = countEdges(graph.adjList);
-	while(running) {
-		running = rule1_5(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
-		changes_to_graph = changes_to_graph || running;
-	}
-	finalVertex = graph.adjList.size();
-	finalEdges = countEdges(graph.adjList);
-	end = high_resolution_clock::now();
-	time.time_rr1_5 += duration_cast<milliseconds>(end - start);
-	time.vertex_reduced_1_5 += initialVertex - finalVertex;
-	time.edge_reduced_1_5 += initialEdges - finalEdges;
+		// RR2 begin
+		running = true;
+		start = high_resolution_clock::now();
+		initialVertex = graph.adjList.size();
+		initialEdges = countEdges(graph.adjList);
+		while(running) {
+			running = rule2(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
+			changes_to_graph = changes_to_graph || running;
+		}
+		finalVertex = graph.adjList.size();
+		finalEdges = countEdges(graph.adjList);
+		end = high_resolution_clock::now();
+		time.time_rr2 += duration_cast<milliseconds>(end - start);
+		time.vertex_reduced_2 += initialVertex - finalVertex;
+		time.edge_reduced_2 += initialEdges - finalEdges;
+		// RR2 end
 
+		// RR3 begin
+		running = true;
+		start = high_resolution_clock::now();
+		initialVertex = graph.adjList.size();
+		initialEdges = countEdges(graph.adjList);
+		while(running) {
+			running = rule3(graph.adjList);
+			changes_to_graph = changes_to_graph || running;
+		}
+		finalVertex = graph.adjList.size();
+		finalEdges = countEdges(graph.adjList);
+		end = high_resolution_clock::now();
+		time.time_rr3 += duration_cast<milliseconds>(end - start);
+		time.vertex_reduced_3 += initialVertex - finalVertex;
+		time.edge_reduced_3 += initialEdges - finalEdges;
+		// RR3 end
 
-	running = true;
-	start = high_resolution_clock::now();
-	initialVertex = graph.adjList.size();
-	initialEdges = countEdges(graph.adjList);
-	while(running) {
-		running = rule2(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
-		changes_to_graph = changes_to_graph || running;
-	}
-	finalVertex = graph.adjList.size();
-	finalEdges = countEdges(graph.adjList);
-	end = high_resolution_clock::now();
-	time.time_rr2 += duration_cast<milliseconds>(end - start);
-	time.vertex_reduced_2 += initialVertex - finalVertex;
-	time.edge_reduced_2 += initialEdges - finalEdges;
+		// RR4 begin
+		running = true;
+		start = high_resolution_clock::now();
+		initialVertex = graph.adjList.size();
+		initialEdges = countEdges(graph.adjList);
+		while(running) {
+			running = rule4(graph.adjList);
+			changes_to_graph = changes_to_graph || running;
+		}
+		finalVertex = graph.adjList.size();
+		finalEdges = countEdges(graph.adjList);
+		end = high_resolution_clock::now();
+		time.time_rr4 += duration_cast<milliseconds>(end - start);
+		time.vertex_reduced_4 += initialVertex - finalVertex;
+		time.edge_reduced_4 += initialEdges - finalEdges;
+		// RR4 end
 
-	running = true;
-	start = high_resolution_clock::now();
-	initialVertex = graph.adjList.size();
-	initialEdges = countEdges(graph.adjList);
-	while(running) {
-		running = rule3(graph.adjList);
-		changes_to_graph = changes_to_graph || running;
-	}
-	finalVertex = graph.adjList.size();
-	finalEdges = countEdges(graph.adjList);
-	end = high_resolution_clock::now();
-	time.time_rr3 += duration_cast<milliseconds>(end - start);
-	time.vertex_reduced_3 += initialVertex - finalVertex;
-	time.edge_reduced_3 += initialEdges - finalEdges;
-
-	running = true;
-	start = high_resolution_clock::now();
-	initialVertex = graph.adjList.size();
-	initialEdges = countEdges(graph.adjList);
-	while(running) {
-		running = rule4(graph.adjList);
-		changes_to_graph = changes_to_graph || running;
-	}
-	finalVertex = graph.adjList.size();
-	finalEdges = countEdges(graph.adjList);
-	end = high_resolution_clock::now();
-	time.time_rr4 += duration_cast<milliseconds>(end - start);
-	time.vertex_reduced_4 += initialVertex - finalVertex;
-	time.edge_reduced_4 += initialEdges - finalEdges;
-
-	running = true;
-	start = high_resolution_clock::now();
-	initialVertex = graph.adjList.size();
-	initialEdges = countEdges(graph.adjList);
-	while(running) {
-		running = rule5(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
-		changes_to_graph = changes_to_graph || running;
-	}
-	finalVertex = graph.adjList.size();
-	finalEdges = countEdges(graph.adjList);
-	end = high_resolution_clock::now();
-	time.time_rr5 += duration_cast<milliseconds>(end - start);
-	time.vertex_reduced_5 += initialVertex - finalVertex;
-	time.edge_reduced_5 += initialEdges - finalEdges;
+		//RR5 begin
+		running = true;
+		start = high_resolution_clock::now();
+		initialVertex = graph.adjList.size();
+		initialEdges = countEdges(graph.adjList);
+		while(running) {
+			running = rule5(graph.adjList, graph.undeletableVertices, graph.solution, graph.K);
+			changes_to_graph = changes_to_graph || running;
+		}
+		finalVertex = graph.adjList.size();
+		finalEdges = countEdges(graph.adjList);
+		end = high_resolution_clock::now();
+		time.time_rr5 += duration_cast<milliseconds>(end - start);
+		time.vertex_reduced_5 += initialVertex - finalVertex;
+		time.edge_reduced_5 += initialEdges - finalEdges;
+		// RR5 end
 	}
 
 	if(!time.matroid_matching_completed) {

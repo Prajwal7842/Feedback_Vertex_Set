@@ -62,6 +62,7 @@ int contractGraph(map<int, multiset<int>>& g, set<int> U) {
 }
 
 void printset(set<int> s){
+	// Utility function to print solution set.
 	for(auto i: s){
 		cout<<i<<" ";
 	}
@@ -69,25 +70,33 @@ void printset(set<int> s){
 }
 
 bool branch(map<int, multiset<int>> g, set<int> f, int k, set<int>& solution, RRTimeLog &time2) {
+	/* Main Branching function that generates a solution or determines that solution does not exists */
+
 	auto now = high_resolution_clock::now();
 	auto total_duration = duration_cast<minutes>(now - time2.start_time);
 	if(total_duration.count() >= 30) {
-		cout<<"TIMEOUT\n";
+		cout << "TIMEOUT\n";
 		exit(0);
 	}
+
 	Graph temp;
 	temp.adjList = g;
 	temp.undeletableVertices = f;
 	temp.solution = solution;
 	temp.K = k;
+
+	// Apply reduction rules
 	reduce(temp, time2);
+
 	g = temp.adjList;
 	f = temp.undeletableVertices;
 	solution = temp.solution;
 	k = temp.K;
+
 	if(pruningRule(g, f, k)) {
 		return 0;
 	}
+
 	if(k >= 0) {
 		if((int)(g.size()) == 0) {
 			return 1;
@@ -95,6 +104,7 @@ bool branch(map<int, multiset<int>> g, set<int> f, int k, set<int>& solution, RR
 	} else {
 		return 0;
 	}
+
 	int chosenVertex = select_highest_degree_vertex(g, f);
 	set<int> neighbourU = getNeighbours(g, chosenVertex);
 	set<int> U = getU(neighbourU, f);
@@ -128,7 +138,8 @@ bool branch(map<int, multiset<int>> g, set<int> f, int k, set<int>& solution, RR
 }
 
 
-bool solve(Graph &graph, RRTimeLog &time1, RRTimeLog &time2) {
+bool solve(Graph &graph, RRTimeLog &time1, RRTimeLog &time2) { 
+	/* Function to call branching function with initial params */
 	reduce(graph, time1);
 	return branch(graph.adjList, graph.undeletableVertices, graph.K, graph.solution, time2);
 }

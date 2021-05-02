@@ -10,6 +10,7 @@ using namespace std;
 
 
 int32_t main(int argc, char*argv[]) {
+	// Main Function 
 	ios_base::sync_with_stdio(0);
 	cin.tie(0);
 	cout.tie(0);
@@ -29,10 +30,13 @@ int32_t main(int argc, char*argv[]) {
 	RRTimeLog time1, time2;
 	time1.start_time = start;
 	time2.start_time = start;
-	cout<<argv[1]<<",";
+
+	cout << argv[1] << ",";
+	
 	if(solve(graph, time1, time2) == 0) {
-		cout<<"false"<<",";
-	} else {
+		cout << "false" << ",";
+	} 
+	else {
 		auto end = high_resolution_clock::now();
 		if(!time2.matroid_matching_completed){
 			time2.matroid_matching_time = end;
